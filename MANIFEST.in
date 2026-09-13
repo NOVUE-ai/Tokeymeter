@@ -1,0 +1,32 @@
+# What the source distribution carries beyond the package itself.
+#
+# The sdist already included tests/ but not the files those tests read, so a
+# fresh `pip download --no-binary :all:` produced a tree where 11 tests failed
+# on a clean checkout — and the README tells people to run exactly that suite.
+# An sdist that cannot pass its own tests is worse than one with no tests in it.
+
+include LICENSE
+include README.md
+include CHANGELOG.md
+include CONTRIBUTING.md
+include SECURITY.md
+include CODE_OF_CONDUCT.md
+include AGENTS.md
+include ACCEPTANCE.py
+include walkthrough_seed.py
+include MANIFEST.in
+include .gitignore
+
+recursive-include docs *.md *.png *.gif
+recursive-include examples *.py *.md
+# *.py alone left contract_snapshot.json behind, and the frozen-surface test
+# reads it — so a downloaded sdist failed a test about its own API contract.
+recursive-include tests *.py *.json *.yaml *.yml *.txt
+recursive-include scripts *.py *.json
+recursive-include .github *.yml *.yaml *.md
+
+# Never ship build noise or anyone's ledger.
+global-exclude __pycache__ *.py[cod] *.jsonl .DS_Store
+prune .venv
+prune build
+prune dist

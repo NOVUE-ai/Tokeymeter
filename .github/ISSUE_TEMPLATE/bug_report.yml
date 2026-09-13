@@ -1,0 +1,38 @@
+name: Bug report
+description: Something behaves differently from what the docs say
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before anything else, please run `tokeymeter doctor` and paste the output.
+        It reports overhead, ledger health and package integrity, and it answers
+        most of the questions we would otherwise have to ask you.
+  - type: textarea
+    id: doctor
+    attributes:
+      label: tokeymeter doctor
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Smallest code that shows it
+      description: |
+        A runnable snippet beats a description. Please redact prompts — we do
+        not want them, and we do not need them to reproduce a bug.
+      render: python
+  - type: input
+    id: version
+    attributes:
+      label: Version and Python
+      placeholder: "tokeymeter 0.23.2, Python 3.12, Windows 11"
+    validations:
+      required: true

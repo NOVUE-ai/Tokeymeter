@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # The matrix is the point: this library runs inside other people's
+    # processes, so "works on my Python" is not a claim worth making.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev]"
+      - run: pytest -q --ignore=tests/test_benchmarks.py
+
+  gate:
+    # The release gate: integrity manifest, ASCII-only CLI output, no
+    # placeholder text, docs in step with the code. A green test suite is not
+    # the same as a shippable package.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: python scripts/run_all_checks.py
+
+  zero-dependency:
+    # The property a security reviewer checks first. If a runtime dependency
+    # ever sneaks in, this fails loudly rather than being discovered by them.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install .
+      - name: base install must pull in nothing
+        run: |
+          python - <<'PY'
+          import tomllib
+          deps = tomllib.load(open("pyproject.toml","rb"))["project"]["dependencies"]
+          assert deps == [], f"runtime dependencies appeared: {deps}"
+          print("zero runtime dependencies, confirmed")
+          PY
+      - name: it must work with nothing else installed
+        run: python -m tokeymeter firstrun

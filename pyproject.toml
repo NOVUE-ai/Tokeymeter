@@ -1,0 +1,137 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tokeymeter"
+version = "0.31.1"
+description = "Stop AI agents that have stopped getting anywhere. One line, in your own process, no proxy and no account."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+authors = [
+    { name = "Tokeymeter" },
+]
+keywords = [
+    "ai-agents", "agent", "llm", "llmops", "guardrails", "observability",
+    "agent-monitoring", "runaway-agent", "infinite-loop", "circuit-breaker",
+    "rate-limiting", "cost-control", "finops", "openai", "anthropic",
+    "langchain", "governance", "compliance", "python",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+]
+# Core has zero runtime deps. Stdlib only.
+dependencies = []
+
+[project.optional-dependencies]
+# Method 1 (semantic caching). Adds ~1GB of deps (torch + transformers).
+semantic = [
+    "numpy>=1.24",
+    "sentence-transformers>=2.5",
+]
+# Indexed nearest-neighbor lookup. Auto-selected when installed.
+# Scales semantic cache from ~10k entries (linear) to millions (vec0).
+scale = [
+    "numpy>=1.24",
+    "sqlite-vec>=0.1.0",
+    "redis>=5.0",
+    "cryptography>=42.0",
+]
+# Method 2 (prompt compression). LLMLingua-2 from Microsoft Research.
+# Adds ~500MB of deps (transformers + bert-base classifier).
+compression = [
+    "llmlingua>=0.2.2",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=4.0",
+    "numpy>=1.24",
+    "sqlite-vec>=0.1.0",
+    # Required so the full suite actually runs in CI: without these the
+    # v0.9 distributed tests (fakeredis) and audit-signing / cipher tests
+    # (cryptography) are SKIPPED, leaving headline features uncovered.
+    "cryptography>=42.0",
+    "fakeredis>=2.0",
+    "redis>=5.0",
+    # redislite unlocks cross-instance distributed-single-flight tests, but it
+    # does NOT build on Windows (upstream limitation). Marker keeps `pip install
+    # -e ".[dev]"` working on Windows — those tests skip cleanly there and are
+    # covered by fakeredis + the real-redis smoke script instead.
+    "redislite>=6.0; platform_system != 'Windows'",
+    "anyio>=4.0",
+    # hypothesis is pure-Python and installs cleanly on every platform
+    # (verified on Windows/py3.14) — property-based fuzzing of the security-
+    # and correctness-critical surfaces (secret scanner, envelope, id grammar,
+    # compression, cache keys).
+    "hypothesis>=6.0",
+]
+# Provider SDKs for the drop-in wrappers (tokeymeter.integrations.*).
+providers = [
+    "openai>=1.0",
+    "anthropic>=0.39",
+]
+# Asymmetric audit signing (Ed25519) + at-rest cache encryption (Fernet).
+audit = [
+    "cryptography>=42.0",
+]
+# Live panel (demo/server.py + demo/run_demo.py). Without these, importing
+# or running the panel raises ModuleNotFoundError on a fresh clone. The
+# panel client itself uses only stdlib (urllib), so nothing more is needed.
+demo = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+]
+
+[project.scripts]
+tokeymeter = "tokeymeter.__main__:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "soak: bounded concurrency/soak tests (run in CI; scale up for nightly deep runs via TOKEYMETER_SOAK_SCALE)",
+    "io_heavy: performs tens of thousands of individual file opens. Fast on Linux (~2s), 50x slower on Windows (~95s) because NTFS plus real-time AV scanning charges ~1.5ms per open/close where Linux charges ~25us. NOT a product defect: the synchronous ledger deliberately re-opens per record so a concurrent trim+os.replace can never leave a writer appending to a dead inode. Deselect with -m 'not io_heavy' for fast local iteration; always run the full set before a release.",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/NOVUE-ai/tokeymeter"
+"Documentation" = "https://github.com/NOVUE-ai/tokeymeter#readme"
+"Changelog" = "https://github.com/NOVUE-ai/tokeymeter/blob/main/CHANGELOG.md"
+"Issues" = "https://github.com/NOVUE-ai/tokeymeter/issues"
+"Source" = "https://github.com/NOVUE-ai/tokeymeter"
+
+[tool.setuptools.packages.find]
+include = ["tokeymeter*"]
+
+[tool.setuptools.package-data]
+# Ship the signed integrity manifest inside the package so verify_self()
+# works on installed wheels. py.typed marks the package as typed (PEP 561).
+# The in-package *.md files are hashed by the integrity manifest, so they must
+# ship too — otherwise an installed wheel reports itself `tampered` for files
+# that were simply never installed.
+tokeymeter = ["_manifest.json", "py.typed", "**/*.md"]
+exclude = ["tests*", "examples*"]
+
+[tool.mypy]
+# PLAT-2 scaffold: lenient globally (legacy modules), strict on new code.
+# Policy: every NEW module lands mypy-clean; legacy modules tighten
+# opportunistically. The runtime kernel is held to the strict bar.
+python_version = "3.11"
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+
+[[tool.mypy.overrides]]
+module = "tokeymeter.runtime.*"
+disallow_untyped_defs = true
+check_untyped_defs = true

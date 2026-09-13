@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Tokeymeter's own output — NEVER commit a ledger. It contains no prompt or
+# response text, but task ids, agent names and spend describe your operations
+# the way an application log does.
+tokeymeter-demo/
+tokeymeter-real/
+*.jsonl
+tokeymeter-agents.html
+tokeymeter-savings.html
+tokeymeter-savings.json
+real-report.html
+report.html
+
+# Scratch from a local walkthrough
+check.py
+diag.py
+harness.py
+fake_openai.py
+
+# Secrets. Belt and braces — keys belong in the environment, never a file.
+.env
+*.pem
+*.key
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

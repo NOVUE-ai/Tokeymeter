@@ -1,0 +1,32 @@
+name: A working agent was stopped
+description: Stall detection halted a task that was actually making progress
+labels: [false-positive, priority]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most important kind of report we can get. A ceiling that
+        stops working agents gets switched off, and then it protects nobody —
+        so a false positive is treated as a priority bug, not a tuning question.
+  - type: textarea
+    id: halt
+    attributes:
+      label: The halt message
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why the agent was actually working
+      description: |
+        What was it doing? Does it legitimately repeat an answer for several
+        turns — retrying an upstream, polling, waiting on a job?
+    validations:
+      required: true
+  - type: textarea
+    id: suggest
+    attributes:
+      label: Output of `tokeymeter agents --suggest`
+      description: This tells us what your traffic looks like without sending us any of it.
+      render: text
