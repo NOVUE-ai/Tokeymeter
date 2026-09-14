@@ -223,11 +223,11 @@ Without the ceiling that task runs all 40 calls and costs $1.0490.
 
 ```mermaid
 flowchart LR
-    A["your agent<br/>(the loop you wrote)"] --> B{{tokeymeter<br/>same process}}
-    B -->|allowed| C["OpenAI · Anthropic<br/>Bedrock · your own box"]
-    B -->|"going nowhere"| D["STOPPED<br/>+ one alert"]
-    C --> E[("one ledger<br/>26 fields, no content")]
-    E --> F["report · plan · suggest"]
+    A["your agent<br/>the loop you wrote"] --> B["tokeymeter<br/>in your process"]
+    B -->|"allowed"| C["OpenAI, Anthropic,<br/>Bedrock, your own box"]
+    B -->|"going nowhere"| D["STOPPED<br/>plus one alert"]
+    C --> E["one ledger<br/>26 fields, no content"]
+    E --> F["report, plan, suggest"]
 ```
 
 No proxy, no sidecar, no account. It is a checkpoint inside the caller, which is
